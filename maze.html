@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<!-- 
+    Richard McNew
+    CS 5400
+    Assignment 03:  3D Maze
+-->
+<html>
+	<head>
+		<title>3D Maze</title>
+
+		<script id="vertex-shader" type="x-shader/x-vertex">
+			attribute vec3 aVertexPosition;
+            attribute vec3 aNormalVector;
+			attribute vec4 aVertexColor;
+
+            uniform mat4 modelView;
+            uniform mat4 projection;
+
+            uniform vec4 ambientProduct, diffuseProduct, specularProduct;
+            uniform vec4 lightPosition;
+            uniform float shininess;
+            
+            varying mediump vec4 vColor;
+			
+			void main(void) {
+
+                vec3 pos = -(modelView * vec4(aVertexPosition,1.0)).xyz;
+        
+                // fixed light postion
+                
+                vec3 light = lightPosition.xyz;
+                vec3 L = normalize( light - pos );
+
+                
+                vec3 E = normalize( -pos );
+                vec3 H = normalize( L + E );
+                
+                vec4 NN = vec4(aNormalVector, 0);
+
+                // Transform vertex normal into eye coordinates
+                   
+                vec3 N = normalize( (modelView * NN).xyz);
+
+                // Compute terms in the illumination equation
+                vec4 ambient = ambientProduct;
+
+                float Kd = max( dot(L, N), 0.0 );
+                vec4  diffuse = Kd * diffuseProduct;
+
+                float Ks = pow( max(dot(N, H), 0.0), shininess );
+                vec4  specular = Ks * specularProduct;
+                
+                if( dot(L, N) < 0.0 ) {
+                    specular = vec4(0.0, 0.0, 0.0, 1.0);
+                } 
+
+                gl_Position = projection * modelView * vec4(aVertexPosition, 1.0);
+				vColor = aVertexColor * (ambient + diffuse + specular);
+			}
+		</script>
+
+        <script id="fragment-shader" type="x-shader/x-fragment">
+			varying mediump vec4 vColor;
+      		void main(void) {
+        		gl_FragColor = vColor;
+      		}
+        </script>
+		<script id="webgl-utils" type="text/javascript" src="webgl-utils.js"></script>
+		<script id="initShaders" type="text/javascript" src="InitShaders.js"></script> 
+		<script id="MV"          type="text/javascript" src="MV.js"></script>
+		<script id="maze"        type="text/javascript" src="maze.js"></script>
+	</head>
+	<body>
+		<canvas id="gl-canvas" width="512" height="512">
+			Oops ... your browser doesn't support the HTML5 canvas element
+		</canvas>
+	</body>
+</html>
